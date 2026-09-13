@@ -1,0 +1,66 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # 06:15 UTC daily. Off the hour on purpose: GitHub's scheduler queues heavily
+    # at :00 and a job can be delayed by 20 minutes or dropped entirely.
+    - cron: '15 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# A scheduled run and a push must not deploy over each other, but the in-flight
+# one is allowed to finish rather than being cancelled mid-deploy.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Restore fetch cache
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: github-data-${{ github.run_id }}
+          restore-keys: github-data-
+
+      - name: Build site
+        env:
+          # The default token reads public data and the contribution calendar.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_LOGIN: ${{ github.repository_owner }}
+        run: node build.mjs
+
+      - name: Check the build produced a real page
+        run: |
+          test -s dist/index.html || { echo "index.html is empty"; exit 1; }
+          test -s dist/styles.css || { echo "styles.css is missing"; exit 1; }
+          test -s dist/app.js     || { echo "app.js is missing"; exit 1; }
+          grep -q '</html>' dist/index.html || { echo "index.html is truncated"; exit 1; }
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

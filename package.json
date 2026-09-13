@@ -1,0 +1,13 @@
+{
+  "name": "arielb57-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Static portfolio and GitHub activity dashboard, rebuilt daily from the GitHub API.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "node build.mjs",
+    "build:offline": "node build.mjs --offline",
+    "serve": "node scripts/serve.mjs"
+  }
+}
