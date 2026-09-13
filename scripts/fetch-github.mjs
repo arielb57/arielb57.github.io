@@ -125,8 +125,26 @@ async function fetchContributions(login, token, years) {
   return { byYear, calendar, totals };
 }
 
+/**
+ * Projects produced by the forge pipeline carry a `.forge.json` manifest.
+ * Reading it lets the site label them as generated rather than hand-written.
+ * A portfolio that hides how something was made is a portfolio that falls
+ * apart the moment somebody asks, so this is not optional decoration.
+ */
+async function fetchForgeManifest(login, repo, token) {
+  try {
+    const res = await fetch(`${API}/repos/${login}/${repo}/contents/.forge.json`, {
+      headers: { ...headers(token), accept: 'application/vnd.github.raw+json' },
+    });
+    if (!res.ok) return null; // 404 simply means it was written by hand
+    return JSON.parse(await res.text());
+  } catch {
+    return null;
+  }
+}
+
 async function fetchRepoDetail(login, repo, token) {
-  const [languages, commits] = await Promise.all([
+  const [languages, commits, forge] = await Promise.all([
     rest(`/repos/${login}/${repo.name}/languages`, token).catch(() => ({})),
     // `per_page=1` plus the Link header is the cheap way to get a commit count
     // without walking every page of history.
@@ -137,8 +155,9 @@ async function fetchRepoDetail(login, repo, token) {
         return last ? Number(last[1]) : res.ok ? 1 : 0;
       })
       .catch(() => 0),
+    fetchForgeManifest(login, repo.name, token),
   ]);
-  return { languages, commits };
+  return { languages, commits, forge };
 }
 
 export async function collect({ login, token, includeForks = false }) {
@@ -165,6 +184,14 @@ export async function collect({ login, token, includeForks = false }) {
       language: repo.language,
       languages: detail.languages,
       commits: detail.commits,
+      forge: detail.forge
+        ? {
+            generatedAt: detail.forge.generatedAt || null,
+            trendOrigin: detail.forge.trendOrigin || null,
+            tests: detail.forge.gate?.stats?.testCases ?? null,
+            assertions: detail.forge.gate?.stats?.assertions ?? null,
+          }
+        : null,
       topics: repo.topics || [],
       size: repo.size,
       license: repo.license?.spdx_id || null,
@@ -187,6 +214,7 @@ export async function collect({ login, token, includeForks = false }) {
     }
   }
 
+  const generated = detailed.filter((r) => r.forge).length;
   const totalStars = detailed.reduce((n, r) => n + r.stars, 0);
   const totalCommits = detailed.reduce((n, r) => n + r.commits, 0);
   const activeDays = contributions.calendar.filter((d) => d.count > 0).length;
@@ -216,6 +244,8 @@ export async function collect({ login, token, includeForks = false }) {
       commits: totalCommits,
       activeDays,
       languages: Object.keys(languages).length,
+      generated,
+      handWritten: detailed.length - generated,
       longestStreak: longestStreak(contributions.calendar),
     },
   };

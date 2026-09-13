@@ -62,17 +62,23 @@
 
   /* --- project filtering -------------------------------------------------- */
 
-  const chips = Array.from(document.querySelectorAll('.chip[data-filter]'));
+  const chips = Array.from(document.querySelectorAll('.chip[data-filter], .chip[data-origin-filter]'));
   const cards = Array.from(document.querySelectorAll('#project-grid .card'));
 
   if (chips.length > 0 && cards.length > 0) {
-    const select = (filter) => {
-      for (const chip of chips) {
-        chip.setAttribute('aria-pressed', String(chip.dataset.filter === filter));
-      }
+    // One active filter at a time, over either dimension. Combining language
+    // and origin would routinely produce an empty grid, which reads as a bug.
+    const select = (chip) => {
+      for (const other of chips) other.setAttribute('aria-pressed', String(other === chip));
+
+      const language = chip.dataset.filter;
+      const origin = chip.dataset.originFilter;
+
       let shown = 0;
       for (const card of cards) {
-        const match = filter === 'all' || card.dataset.language === filter;
+        const match = origin
+          ? card.dataset.origin === origin
+          : language === 'all' || card.dataset.language === language;
         // `hidden` rather than display:none — the stylesheet enforces it and
         // it keeps the cards out of the accessibility tree too.
         card.hidden = !match;
@@ -81,9 +87,7 @@
       announce(`${shown} project${shown === 1 ? '' : 's'} shown`);
     };
 
-    for (const chip of chips) {
-      chip.addEventListener('click', () => select(chip.dataset.filter));
-    }
+    for (const chip of chips) chip.addEventListener('click', () => select(chip));
   }
 
   /* --- screen reader announcements ---------------------------------------- */
