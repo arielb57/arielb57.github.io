@@ -575,3 +575,12 @@ a { color: inherit; }
   line-height: 1.5;
   color: var(--text-faint);
 }
+
+/* A five-column table does not fit a 400px phone. It gets its own scroll
+   container so the table scrolls sideways and the page body never does. */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll .table { min-width: 420px; }

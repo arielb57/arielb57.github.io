@@ -143,6 +143,7 @@ function yearTable(byYear) {
   if (years.length === 0) return '<p class="empty">No yearly data available.</p>';
 
   return `
+    <div class="table-scroll">
     <table class="table">
       <thead><tr><th>Year</th><th class="num">Commits</th><th class="num">PRs</th><th class="num">Issues</th><th class="num">Total</th></tr></thead>
       <tbody>
@@ -153,7 +154,8 @@ function yearTable(byYear) {
           })
           .join('')}
       </tbody>
-    </table>`;
+    </table>
+    </div>`;
 }
 
 function repoTable(repos) {
@@ -161,6 +163,7 @@ function repoTable(repos) {
   if (rows.length === 0) return '<p class="empty">No repositories yet.</p>';
 
   return `
+    <div class="table-scroll">
     <table class="table">
       <thead><tr><th>Repository</th><th>Language</th><th class="num">Commits</th><th class="num">Stars</th><th class="num">Updated</th></tr></thead>
       <tbody>
@@ -176,7 +179,8 @@ function repoTable(repos) {
           )
           .join('')}
       </tbody>
-    </table>`;
+    </table>
+    </div>`;
 }
 
 function projectCards(repos) {
