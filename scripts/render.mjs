@@ -195,7 +195,7 @@ function projectCards(repos) {
     .map(
       (r) => `
       <a class="card" href="${esc(r.url)}" data-language="${esc(r.language || 'other')}"
-         data-origin="${r.forge ? 'generated' : 'hand-written'}" data-topics="${esc((r.topics || []).join(' '))}">
+         data-origin="${r.forge ? 'pipeline' : 'direct'}" data-topics="${esc((r.topics || []).join(' '))}">
         <div class="card__top">
           <span class="card__name">${esc(r.name)}</span>
           ${r.stars > 0 ? `<span class="card__stars">★ ${nf.format(r.stars)}</span>` : ''}
@@ -223,9 +223,12 @@ function filterChips(repos) {
   const mixed = generated > 0 && generated < repos.length;
   if (languages.length < 2 && !mixed) return '';
 
+  // Not "hand-written vs generated": everything here was written with AI
+  // assistance, and a label claiming otherwise would be the dishonest part.
+  // The real distinction is how autonomously each one was produced.
   const origin = mixed
-    ? `<button class="chip" data-origin-filter="hand-written" aria-pressed="false">Hand-written</button>
-       <button class="chip" data-origin-filter="generated" aria-pressed="false">Generated</button>`
+    ? `<button class="chip" data-origin-filter="direct" aria-pressed="false">Built directly</button>
+       <button class="chip" data-origin-filter="pipeline" aria-pressed="false">Built by the pipeline</button>`
     : '';
 
   return `
@@ -299,7 +302,7 @@ export function render(data, { about }) {
       <p class="section__note">
         Every repository below is public, and every number is read from the GitHub API when this page is built.
         ${stats.generated > 0
-          ? `${stats.generated} of ${stats.repos} were produced by the <a href="https://github.com/${esc(profile.login)}/forge">forge</a> pipeline and are marked as such.`
+          ? `${stats.generated} of ${stats.repos} were produced autonomously by the <a href="https://github.com/${esc(profile.login)}/forge">forge</a> pipeline and are marked as such.`
           : ''}
       </p>
     </div>

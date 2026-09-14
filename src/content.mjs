@@ -44,6 +44,16 @@ export const about = {
       Some of the repositories on this page came out of it, and each one says so.
     </p>
     <p>
+      <strong>On how this work was made.</strong> All of it was written with AI
+      assistance — that is true of the repositories marked as pipeline output and of
+      the ones that are not. The difference the labels record is autonomy, not
+      authorship: the marked ones were produced end to end by <a
+      href="https://github.com/arielb57/forge">forge</a> from a specification, and
+      reviewed by me before publication; the rest I built directly, deciding and
+      correcting as I went. I can explain any of them, which is the standard I hold
+      them to.
+    </p>
+    <p>
       Everything measurable on this page is read from the GitHub API when the page is
       built, once a day. If a number looks small, it is because it is small.
     </p>
