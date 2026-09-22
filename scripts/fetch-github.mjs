@@ -126,11 +126,15 @@ async function fetchContributions(login, token, years) {
 }
 
 /**
- * Projects produced by the forge pipeline carry a `.forge.json` manifest.
- * Reading it lets the site label them as generated rather than hand-written.
- * A portfolio that hides how something was made is a portfolio that falls
+ * Projects produced by the forge pipeline carry the `forge-built` topic. Some
+ * also still carry the `.forge.json` manifest the pipeline wrote, but it is
+ * stripped before publication as a rule, so the topic is the durable marker
+ * and the manifest is a bonus: it has the gate's test and assertion counts.
+ * Either lets the site label them as generated rather than hand-written. A
+ * portfolio that hides how something was made is a portfolio that falls
  * apart the moment somebody asks, so this is not optional decoration.
  */
+const FORGE_TOPIC = 'forge-built';
 async function fetchForgeManifest(login, repo, token) {
   try {
     const res = await fetch(`${API}/repos/${login}/${repo}/contents/.forge.json`, {
@@ -144,7 +148,7 @@ async function fetchForgeManifest(login, repo, token) {
 }
 
 async function fetchRepoDetail(login, repo, token) {
-  const [languages, commits, forge] = await Promise.all([
+  const [languages, commits, manifest] = await Promise.all([
     rest(`/repos/${login}/${repo.name}/languages`, token).catch(() => ({})),
     // `per_page=1` plus the Link header is the cheap way to get a commit count
     // without walking every page of history.
@@ -157,6 +161,7 @@ async function fetchRepoDetail(login, repo, token) {
       .catch(() => 0),
     fetchForgeManifest(login, repo.name, token),
   ]);
+  const forge = manifest || ((repo.topics || []).includes(FORGE_TOPIC) ? {} : null);
   return { languages, commits, forge };
 }
 

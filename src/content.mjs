@@ -38,7 +38,7 @@ export const about = {
     </p>
     <p>
       Alongside it I build smaller, sharper things. <strong>forge</strong> is a
-      pipeline that reads six engineering feeds every morning, ranks what it finds by
+      pipeline that reads seven engineering feeds every morning, ranks what it finds by
       cross-source corroboration, and turns the survivors into specifications — then
       refuses to let anything through unless its tests genuinely prove something.
       Some of the repositories on this page came out of it, and each one says so.
