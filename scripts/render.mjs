@@ -369,18 +369,22 @@ export function render(data, { about, startHere, groups, everythingElse }) {
   for (const r of repos) if (r.language) primary.set(r.language, (primary.get(r.language) || 0) + 1);
   const primaryList = [...primary.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 
+  // The hero carries the figures that do not depend on how GitHub attributes
+  // commits. Days with activity comes from the contribution calendar, which
+  // only counts commits made with an email linked to the account, so it sits
+  // next to the heatmap in Activity, where that context is visible.
   const heroStats = [
     { value: stats.repos, label: 'public repositories' },
     { value: stats.commits, label: 'commits across them' },
-    { value: stats.activeDays, label: 'days with activity' },
+    since ? { value: since, label: 'on GitHub since', raw: true } : null,
     { value: primaryList.length, label: 'languages' },
-  ];
+  ].filter(Boolean);
 
   const activityStats = [
     thisYear ? { value: thisYear.total, label: `contributions in ${yearNow}` } : null,
     { value: stats.longestStreak, label: 'days, longest streak' },
     { value: stats.stars, label: 'stars received' },
-    since ? { value: since, label: 'on GitHub since', raw: true } : null,
+    { value: stats.activeDays, label: 'days with activity' },
   ].filter(Boolean);
 
   const statTile = (s) =>
@@ -430,7 +434,7 @@ export function render(data, { about, startHere, groups, everythingElse }) {
     <h1 id="hero-title">${esc(profile.login)}</h1>
     <p class="hero__line">${esc(about.tagline)}</p>
     <div class="hero__stats" role="list" aria-label="Figures from the GitHub API">
-      ${heroStats.map((s) => `<div class="hero__stat" role="listitem"><span class="hero__value">${nf.format(s.value)}</span><span class="hero__label">${esc(s.label)}</span></div>`).join('')}
+      ${heroStats.map((s) => `<div class="hero__stat" role="listitem"><span class="hero__value">${s.raw ? esc(s.value) : nf.format(s.value)}</span><span class="hero__label">${esc(s.label)}</span></div>`).join('')}
     </div>
     ${primaryList.length
       ? `<p class="hero__langs">${primaryList.map(([name, n]) => `<span class="lang"><span class="dot" style="background:${colorFor(name)}"></span>${esc(name)} <b>${nf.format(n)}</b></span>`).join('')}<span class="hero__langs-note">primary language per repository</span></p>`

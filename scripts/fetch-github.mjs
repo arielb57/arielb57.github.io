@@ -55,7 +55,7 @@ async function allPages(path, token, max = 300) {
  * attribute to the account — commits authored with an unverified email address
  * are invisible here even though they exist in the repository.
  */
-async function fetchContributions(login, token, years) {
+async function fetchContributions(login, token, years, problems = []) {
   const query = `
     query($login: String!, $from: DateTime!, $to: DateTime!) {
       user(login: $login) {
@@ -84,6 +84,7 @@ async function fetchContributions(login, token, years) {
       data = await graphql(query, { login, from, to }, token);
     } catch (err) {
       console.warn(`  contributions for ${year} unavailable: ${err.message}`);
+      problems.push(`contributions for ${year}: ${err.message}`);
       continue;
     }
     const c = data?.user?.contributionsCollection;
@@ -147,18 +148,30 @@ async function fetchForgeManifest(login, repo, token) {
   }
 }
 
-async function fetchRepoDetail(login, repo, token) {
+async function fetchRepoDetail(login, repo, token, problems = []) {
   const [languages, commits, manifest] = await Promise.all([
-    rest(`/repos/${login}/${repo.name}/languages`, token).catch(() => ({})),
+    rest(`/repos/${login}/${repo.name}/languages`, token).catch((err) => {
+      problems.push(`languages for ${repo.name}: ${err.message}`);
+      return {};
+    }),
     // `per_page=1` plus the Link header is the cheap way to get a commit count
     // without walking every page of history.
     fetch(`${API}/repos/${login}/${repo.name}/commits?per_page=1`, { headers: headers(token) })
       .then((res) => {
+        // 409 is GitHub's answer for an empty repository: zero commits is the fact.
+        if (res.status === 409) return 0;
+        if (!res.ok) {
+          problems.push(`commit count for ${repo.name}: HTTP ${res.status}`);
+          return 0;
+        }
         const link = res.headers.get('link') || '';
         const last = link.match(/[?&]page=(\d+)>;\s*rel="last"/);
-        return last ? Number(last[1]) : res.ok ? 1 : 0;
+        return last ? Number(last[1]) : 1;
       })
-      .catch(() => 0),
+      .catch((err) => {
+        problems.push(`commit count for ${repo.name}: ${err.message}`);
+        return 0;
+      }),
     fetchForgeManifest(login, repo.name, token),
   ]);
   const forge = manifest || ((repo.topics || []).includes(FORGE_TOPIC) ? {} : null);
@@ -167,6 +180,10 @@ async function fetchRepoDetail(login, repo, token) {
 
 export async function collect({ login, token, includeForks = false }) {
   console.log(`fetching github data for ${login}`);
+  // Every request that failed, so the build can tell a complete fetch from a
+  // partial one. A partial fetch reads as zero commits and an empty calendar,
+  // which is wrong rather than missing, and must not replace the last good one.
+  const problems = [];
 
   const profile = await rest(`/users/${login}`, token);
 
@@ -176,7 +193,7 @@ export async function collect({ login, token, includeForks = false }) {
 
   const detailed = [];
   for (const repo of repos) {
-    const detail = await fetchRepoDetail(login, repo, token);
+    const detail = await fetchRepoDetail(login, repo, token, problems);
     detailed.push({
       name: repo.name,
       description: repo.description,
@@ -210,7 +227,7 @@ export async function collect({ login, token, includeForks = false }) {
   const years = [];
   for (let y = startYear; y <= thisYear; y += 1) years.push(y);
 
-  const contributions = await fetchContributions(login, token, years);
+  const contributions = await fetchContributions(login, token, years, problems);
 
   const languages = {};
   for (const repo of detailed) {
@@ -226,6 +243,7 @@ export async function collect({ login, token, includeForks = false }) {
 
   return {
     generatedAt: new Date().toISOString(),
+    problems,
     profile: {
       login: profile.login,
       name: profile.name || profile.login,

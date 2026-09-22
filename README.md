@@ -19,7 +19,7 @@ Every number comes from the API at build time. Nothing is hard-coded, and a sect
 
 **Data is baked in, not fetched in the browser.** The page loads with zero requests: no API rate limit, no CORS preflight, no loading spinner, and no way for a visitor to see a broken page because GitHub is slow. The cost is that the numbers are up to 24 hours old, which for a portfolio is not a cost at all.
 
-**The last successful fetch is cached.** If GitHub is unreachable during the scheduled rebuild, `build.mjs` falls back to `.cache/github.json` and rebuilds with a warning. A failed API call must not take the live site down — it should just serve yesterday's numbers.
+**The last successful fetch is cached.** If GitHub is unreachable during the scheduled rebuild, `build.mjs` falls back to `.cache/github.json` and rebuilds with a warning. A failed API call must not take the live site down — it should just serve yesterday's numbers. The same goes for a partial fetch: if any request fails (a rate limit, a missing token, one flaky call), the numbers would be wrong rather than missing, so the build keeps the last complete fetch instead of caching the partial one.
 
 **Commit counts come from the `Link` header.** Asking for the full commit list of a repository costs one request per hundred commits. Requesting `per_page=1` and reading the `rel="last"` page number from the response header costs one request regardless of history length.
 

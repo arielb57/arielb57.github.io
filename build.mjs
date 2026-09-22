@@ -60,7 +60,21 @@ async function getData() {
 
   try {
     const data = await collect({ login: LOGIN, token });
-    saveCache(data);
+    const problems = data.problems || [];
+    if (problems.length === 0) {
+      saveCache(data);
+      return data;
+    }
+    // A partial fetch (a rate limit, a missing token, one flaky request) must
+    // not become the page: it would print zero commits and an empty calendar
+    // as if they were facts. The last complete fetch is the better answer.
+    console.warn(`! ${problems.length} request(s) failed during the fetch, e.g. ${problems[0]}`);
+    const cached = loadCache();
+    if (cached) {
+      console.warn(`! keeping the last complete fetch from ${cached.generatedAt} instead`);
+      return cached;
+    }
+    console.warn('! no cached fetch to fall back on; building from the partial data');
     return data;
   } catch (err) {
     const cached = loadCache();
