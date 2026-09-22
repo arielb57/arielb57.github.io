@@ -8,11 +8,12 @@ My portfolio and GitHub activity dashboard. Static, no framework, no runtime dep
 
 One build step reads the GitHub REST and GraphQL APIs and writes a complete static page:
 
-- **Work** — every public repository, with its real commit count, stars, language and topics, filterable by language.
-- **Activity** — a contribution heatmap for the last 12 months, language breakdown by bytes, per-year commit/PR/issue totals, and a repository table.
-- **About** — the only hand-written text on the site, in `src/content.mjs`.
+- **Hero** — the account name, one line, and four figures read from the API: public repositories, commits, days with activity, and the primary languages GitHub assigns.
+- **Work** — a "Start here" list of five repositories with a sentence each on what to look at, then every public repository grouped by theme, with its real commit count, stars, language and topics. Filters by topic, language and (when the data has both) how the repository was made combine on the client without a network request.
+- **Activity** — a contribution heatmap for the last 12 months, language breakdown by bytes, per-year commit/PR/issue totals, and the most recently pushed repositories.
+- **About** — hand-written, in `src/content.mjs`.
 
-Every number comes from the API at build time. Nothing is hard-coded, and a section with no data renders an honest empty state rather than a placeholder.
+Every number comes from the API at build time. Nothing is hard-coded, and a section with no data renders an honest empty state rather than a placeholder. The choice of which five repositories to show first and which group each one belongs to is content, also in `src/content.mjs`; a name listed there that the API does not return is skipped, and a repository listed nowhere lands in "Everything else" rather than disappearing.
 
 ## Why it is built this way
 
@@ -66,7 +67,7 @@ build.mjs                 orchestration, caching, output checks
 scripts/fetch-github.mjs  REST + GraphQL collection
 scripts/render.mjs        HTML generation, heatmap, charts
 scripts/serve.mjs         local preview server
-src/content.mjs           hand-written copy
+src/content.mjs           hand-written copy, the "Start here" five, the thematic groups
 src/styles.css            design tokens and layout
 src/app.js                theme cycling and project filtering
 ```

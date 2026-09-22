@@ -16,7 +16,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { collect } from './scripts/fetch-github.mjs';
 import { render } from './scripts/render.mjs';
-import { about } from './src/content.mjs';
+import { about, startHere, groups, everythingElse } from './src/content.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const CACHE = join(ROOT, '.cache', 'github.json');
@@ -73,8 +73,18 @@ async function getData() {
 
 const data = await getData();
 
+// The content file names repositories the page should feature. A name the API
+// did not return is skipped by the renderer, but it is worth a line in the log
+// so a rename or an accidental un-publish is noticed on the next daily build.
+const known = new Set(data.repos.map((r) => r.name));
+const named = [...startHere.repos.map((r) => r.name), ...groups.flatMap((g) => g.repos)];
+const missing = [...new Set(named.filter((name) => !known.has(name)))];
+if (missing.length > 0) {
+  console.warn(`! named in src/content.mjs but not in the fetched data: ${missing.join(', ')}`);
+}
+
 mkdirSync(OUT, { recursive: true });
-writeFileSync(join(OUT, 'index.html'), render(data, { about }));
+writeFileSync(join(OUT, 'index.html'), render(data, { about, startHere, groups, everythingElse }));
 copyFileSync(join(ROOT, 'src', 'styles.css'), join(OUT, 'styles.css'));
 copyFileSync(join(ROOT, 'src', 'app.js'), join(OUT, 'app.js'));
 

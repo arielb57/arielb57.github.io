@@ -1,7 +1,7 @@
 /**
  * The page is fully rendered at build time. This adds the two things that need
  * a client: theme choice and project filtering. Everything degrades to a
- * working page if it never runs.
+ * working page if it never runs, and nothing here touches the network.
  */
 
 (() => {
@@ -60,34 +60,69 @@
     });
   }
 
-  /* --- project filtering -------------------------------------------------- */
+  /* --- project filtering --------------------------------------------------
+     Three independent dimensions, each single-select: topic group, language,
+     and how the repository was made. They combine with AND. A combination
+     that matches nothing shows a message with a reset instead of an empty
+     grid that reads as a bug. Groups whose every card is hidden collapse so
+     the headings do not stack up over nothing.
+     ---------------------------------------------------------------------- */
 
-  const chips = Array.from(document.querySelectorAll('.chip[data-filter], .chip[data-origin-filter]'));
-  const cards = Array.from(document.querySelectorAll('#project-grid .card'));
+  const chips = Array.from(document.querySelectorAll('.chip[data-dim]'));
+  const cards = Array.from(document.querySelectorAll('#project-groups .card'));
+  const groups = Array.from(document.querySelectorAll('#project-groups .group'));
+  const noMatch = document.getElementById('no-match');
+  const reset = document.getElementById('reset-filters');
 
   if (chips.length > 0 && cards.length > 0) {
-    // One active filter at a time, over either dimension. Combining language
-    // and origin would routinely produce an empty grid, which reads as a bug.
-    const select = (chip) => {
-      for (const other of chips) other.setAttribute('aria-pressed', String(other === chip));
+    const state = { group: 'all', language: 'all', origin: 'all' };
 
-      const language = chip.dataset.filter;
-      const origin = chip.dataset.originFilter;
-
+    const applyFilters = () => {
       let shown = 0;
       for (const card of cards) {
-        const match = origin
-          ? card.dataset.origin === origin
-          : language === 'all' || card.dataset.language === language;
+        const match = Object.keys(state).every(
+          (dim) => state[dim] === 'all' || card.dataset[dim] === state[dim],
+        );
         // `hidden` rather than display:none — the stylesheet enforces it and
         // it keeps the cards out of the accessibility tree too.
         card.hidden = !match;
         if (match) shown += 1;
       }
+
+      for (const group of groups) {
+        const visible = group.querySelectorAll('.card:not([hidden])').length;
+        group.hidden = visible === 0;
+        const count = group.querySelector('.group__count');
+        if (count) {
+          const total = Number(count.dataset.total);
+          count.textContent = visible === total ? String(total) : `${visible} of ${total}`;
+        }
+      }
+
+      if (noMatch) noMatch.hidden = shown > 0;
+
+      for (const chip of chips) {
+        chip.setAttribute('aria-pressed', String(state[chip.dataset.dim] === chip.dataset.value));
+      }
+
       announce(`${shown} project${shown === 1 ? '' : 's'} shown`);
     };
 
-    for (const chip of chips) chip.addEventListener('click', () => select(chip));
+    for (const chip of chips) {
+      chip.addEventListener('click', () => {
+        state[chip.dataset.dim] = chip.dataset.value;
+        applyFilters();
+      });
+    }
+
+    if (reset) {
+      reset.addEventListener('click', () => {
+        for (const dim of Object.keys(state)) state[dim] = 'all';
+        applyFilters();
+        const first = chips.find((c) => c.dataset.value === 'all');
+        if (first) first.focus();
+      });
+    }
   }
 
   /* --- screen reader announcements ---------------------------------------- */
