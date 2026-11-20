@@ -12,8 +12,10 @@ export const about = {
   /** The GitHub profile has no display name set, so the site supplies one. */
   name: 'Ariel Belhamou',
 
-  /** The one factual line under the name in the hero. */
-  tagline: 'Paris. Small, exact finance tools in Rust, TypeScript and Python.',
+  /** The one factual line under the name in the hero. VYVE leads: it is the main work. */
+  tagline:
+    'Paris. I am building VYVE, a marketplace with escrowed payments on Postgres ' +
+    'row-level security. Alongside it, small and exact finance tools in Rust, TypeScript and Python.',
 
   sourceUrl: 'https://github.com/arielb57/arielb57.github.io',
 
@@ -58,12 +60,9 @@ export const about = {
       the GitHub API when the page is built, not typed in.
     </p>
     <p>
-      <strong>VYVE</strong> is private, so it is not in the list above. It is
-      Postgres with row-level security everywhere, an escrow payment flow, and the
-      legal and tax structure that has to match it: 343 commits and 273 test files
-      since May 2026. The hard part was not the code. It was deciding who is allowed
-      to see what, and then proving the database enforces it rather than hoping the
-      application layer does.
+      <a href="#vyve"><strong>VYVE</strong></a> is the main thing, and it has its
+      own section at the top of this page because it is private and none of the
+      numbers below include it.
     </p>
     <p>
       <a href="https://github.com/arielb57/forge"><strong>forge</strong></a> reads
@@ -89,6 +88,52 @@ export const about = {
       it is small.
     </p>
   `,
+};
+
+/**
+ * VYVE, the main project, shown first and on its own. The repository is
+ * private, so nothing here can be read from the API: these figures are typed
+ * in by hand and the page says so. Keep them in step with the repository.
+ */
+export const featured = {
+  id: 'vyve',
+  name: 'VYVE',
+  kicker: 'Main project · private repository',
+  summary:
+    'A marketplace, built end to end: the database, the payment flow, and the legal ' +
+    'and tax structure the payment flow has to match.',
+  points: [
+    {
+      title: 'Row-level security everywhere',
+      text:
+        'Every table in Postgres carries its own access policy. Who may see what is ' +
+        'decided once, in the database, and tested there, rather than hoped for in ' +
+        'the application layer.',
+    },
+    {
+      title: 'Escrowed payments',
+      text:
+        'The buyer’s money is held until the transaction completes, then released to ' +
+        'the seller or refunded. The payment flow is the core of the product, not a plug-in.',
+    },
+    {
+      title: 'Legal and tax structure',
+      text:
+        'The flow of money in the code has to match the flow of money in the contracts ' +
+        'and the tax structure. Both are part of the project, not an afterthought.',
+    },
+  ],
+  /** Hand-maintained: the repository is private, so the API cannot supply these. */
+  figures: [
+    { value: '343', label: 'commits' },
+    { value: '273', label: 'test files' },
+    { value: 'May 2026', label: 'started' },
+  ],
+  figuresNote: 'Counted from the private repository by hand, not by the API like the rest of the page.',
+  hardPart:
+    'The hard part was not the code. It was deciding who is allowed to see what, and ' +
+    'then proving the database enforces it rather than hoping the application layer does.',
+  access: 'The code is private. I am happy to walk through it on a call or share read access on request.',
 };
 
 /**
