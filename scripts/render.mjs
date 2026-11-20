@@ -349,9 +349,37 @@ function filters(grouped, repos) {
   return rows.length ? `<div class="filters">${rows.join('')}</div>` : '';
 }
 
+/* --- featured project ------------------------------------------------------
+   The main project, shown before everything else. It is private, so its
+   figures come from content.mjs and are labelled as hand-counted.
+   --------------------------------------------------------------------------- */
+
+function featuredSection(f) {
+  if (!f) return '';
+  return `
+  <section class="shell section feature" id="${esc(f.id)}" aria-labelledby="feature-title">
+    <p class="feature__kicker">${esc(f.kicker)}</p>
+    <h2 class="feature__title" id="feature-title">${esc(f.name)}</h2>
+    <p class="feature__summary">${esc(f.summary)}</p>
+    ${f.points?.length
+      ? `<ul class="feature__points">${f.points
+          .map((p) => `<li class="feature__point"><h3>${esc(p.title)}</h3><p>${esc(p.text)}</p></li>`)
+          .join('')}</ul>`
+      : ''}
+    ${f.figures?.length
+      ? `<div class="feature__figures" role="list" aria-label="Figures for ${esc(f.name)}">
+          ${f.figures.map((x) => `<div class="feature__figure" role="listitem"><span class="feature__value">${esc(x.value)}</span><span class="feature__label">${esc(x.label)}</span></div>`).join('')}
+        </div>
+        ${f.figuresNote ? `<p class="feature__note">${esc(f.figuresNote)}</p>` : ''}`
+      : ''}
+    ${f.hardPart ? `<blockquote class="feature__quote">${esc(f.hardPart)}</blockquote>` : ''}
+    ${f.access ? `<p class="feature__access">${esc(f.access)}</p>` : ''}
+  </section>`;
+}
+
 /* --- page ------------------------------------------------------------------ */
 
-export function render(data, { about, startHere, groups, everythingElse }) {
+export function render(data, { about, featured, startHere, groups, everythingElse }) {
   const { repos, stats, contributions, languages } = data;
   // The GitHub profile may carry no display name; content.mjs is authoritative.
   const profile = { ...data.profile, name: about.name || data.profile.name || data.profile.login };
@@ -387,6 +415,15 @@ export function render(data, { about, startHere, groups, everythingElse }) {
     { value: stats.activeDays, label: 'days with activity' },
   ].filter(Boolean);
 
+  const heroFigures = `
+    <div class="hero__stats" role="list" aria-label="Figures from the GitHub API">
+      ${heroStats.map((s) => `<div class="hero__stat" role="listitem"><span class="hero__value">${s.raw ? esc(s.value) : nf.format(s.value)}</span><span class="hero__label">${esc(s.label)}</span></div>`).join('')}
+    </div>
+    ${primaryList.length
+      ? `<p class="hero__langs">${primaryList.map(([name, n]) => `<span class="lang"><span class="dot" style="background:${colorFor(name)}"></span>${esc(name)} <b>${nf.format(n)}</b></span>`).join('')}<span class="hero__langs-note">primary language per repository</span></p>`
+      : ''}
+  `;
+
   const statTile = (s) =>
     `<div class="stat"><div class="stat__value">${s.raw ? esc(s.value) : nf.format(s.value)}</div><div class="stat__label">${esc(s.label)}</div></div>`;
 
@@ -412,14 +449,15 @@ export function render(data, { about, startHere, groups, everythingElse }) {
 </head>
 <body>
 
-<a class="skip" href="#work">Skip to the work</a>
+<a class="skip" href="#${featured ? esc(featured.id) : 'work'}">Skip to the work</a>
 
 <header class="topbar">
   <div class="shell topbar__inner">
     <a class="brand" href="#top">${esc(profile.login)}</a>
     <nav class="nav" aria-label="Sections">
-      <a href="#work">Work</a>
-      <a href="#activity">Activity</a>
+      ${featured ? `<a href="#${esc(featured.id)}">${esc(featured.name)}</a>` : ''}
+      <a href="#work">${featured ? 'Other work' : 'Work'}</a>
+      <a href="#activity"${featured ? " data-optional" : ""}>Activity</a>
       <a href="#about" data-optional>About</a>
       <a href="${esc(profile.url)}">GitHub</a>
       <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch colour theme">◐</button>
@@ -433,21 +471,19 @@ export function render(data, { about, startHere, groups, everythingElse }) {
     <p class="hero__eyebrow">${esc(profile.name)}</p>
     <h1 id="hero-title">${esc(profile.login)}</h1>
     <p class="hero__line">${esc(about.tagline)}</p>
-    <div class="hero__stats" role="list" aria-label="Figures from the GitHub API">
-      ${heroStats.map((s) => `<div class="hero__stat" role="listitem"><span class="hero__value">${s.raw ? esc(s.value) : nf.format(s.value)}</span><span class="hero__label">${esc(s.label)}</span></div>`).join('')}
-    </div>
-    ${primaryList.length
-      ? `<p class="hero__langs">${primaryList.map(([name, n]) => `<span class="lang"><span class="dot" style="background:${colorFor(name)}"></span>${esc(name)} <b>${nf.format(n)}</b></span>`).join('')}<span class="hero__langs-note">primary language per repository</span></p>`
-      : ''}
+    ${featured ? '' : heroFigures}
     <div class="hero__links">
-      <a class="button button--primary" href="#start-here">Start here</a>
+      ${featured
+        ? `<a class="button button--primary" href="#${esc(featured.id)}">See ${esc(featured.name)}</a>
+      <a class="button" href="#start-here">Public work</a>`
+        : '<a class="button button--primary" href="#start-here">Start here</a>'}
       <a class="button" href="${esc(profile.url)}">GitHub profile</a>
     </div>
   </section>
-
+${featuredSection(featured)}
   <section class="shell section" id="work" aria-labelledby="work-title">
     <div class="section__head">
-      <h2 id="work-title">Work</h2>
+      <h2 id="work-title">${featured ? 'Other work' : 'Work'}</h2>
       <p class="section__note">
         ${plural(stats.repos, 'public repository', 'public repositories')}. Every number here is read from the GitHub API when this page is built.
         ${stats.generated > 0
@@ -456,6 +492,7 @@ export function render(data, { about, startHere, groups, everythingElse }) {
       </p>
     </div>
 
+    ${featured ? heroFigures : ''}
     <div class="start" id="start-here">
       <div class="start__head">
         <h3 class="start__title">Start here</h3>

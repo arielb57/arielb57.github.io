@@ -16,7 +16,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { collect } from './scripts/fetch-github.mjs';
 import { render } from './scripts/render.mjs';
-import { about, startHere, groups, everythingElse } from './src/content.mjs';
+import { about, featured, startHere, groups, everythingElse } from './src/content.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const CACHE = join(ROOT, '.cache', 'github.json');
@@ -98,7 +98,7 @@ if (missing.length > 0) {
 }
 
 mkdirSync(OUT, { recursive: true });
-writeFileSync(join(OUT, 'index.html'), render(data, { about, startHere, groups, everythingElse }));
+writeFileSync(join(OUT, 'index.html'), render(data, { about, featured, startHere, groups, everythingElse }));
 copyFileSync(join(ROOT, 'src', 'styles.css'), join(OUT, 'styles.css'));
 copyFileSync(join(ROOT, 'src', 'app.js'), join(OUT, 'app.js'));
 

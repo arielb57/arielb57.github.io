@@ -349,6 +349,112 @@ code {
 
 .button--primary:hover { color: var(--on-accent); filter: brightness(1.08); }
 
+/* --- featured project ------------------------------------------------------ */
+
+.section.feature {
+  position: relative;
+  border-top: 2px solid var(--accent);
+}
+
+.feature__kicker {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.feature__title {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 6.5vw, 3.8rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.feature__summary {
+  margin: 0;
+  max-width: 58ch;
+  font-size: clamp(1.08rem, 2vw, 1.25rem);
+  line-height: 1.5;
+}
+
+.feature__points {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-4);
+  margin: clamp(28px, 4vw, 40px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feature__point {
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+}
+
+.feature__point h3 {
+  margin: 0 0 var(--space-2);
+  font-size: 1.02rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.feature__point p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.feature__figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: var(--space-4) var(--space-6);
+  margin-top: clamp(28px, 4vw, 40px);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+}
+
+.feature__figure { display: flex; flex-direction: column; gap: 2px; }
+
+.feature__value {
+  font-family: var(--font-mono);
+  font-size: clamp(1.6rem, 3.4vw, 2.1rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.feature__label { font-size: 13px; color: var(--text-faint); }
+
+.feature__note {
+  margin: var(--space-3) 0 0;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+.feature__quote {
+  margin: clamp(28px, 4vw, 40px) 0 0;
+  padding: var(--space-1) 0 var(--space-1) var(--space-5);
+  max-width: 62ch;
+  border-left: 3px solid var(--accent);
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.2vw, 1.3rem);
+  line-height: 1.5;
+}
+
+.feature__access {
+  margin: var(--space-5) 0 0;
+  font-size: 14.5px;
+  color: var(--text-muted);
+}
+
 /* --- sections -------------------------------------------------------------- */
 
 .section { padding-block: clamp(44px, 7vw, 80px); border-top: 1px solid var(--border); }
@@ -853,3 +959,8 @@ code {
 }
 
 .footer a { color: var(--text-muted); }
+
+/* When a featured project leads the page, the public GitHub figures move into
+   the Other work section and open it instead of the hero. */
+.section .hero__stats { margin-top: 0; padding-top: 0; border-top: 0; }
+.section .hero__langs { margin-bottom: clamp(32px, 5vw, 48px); }
